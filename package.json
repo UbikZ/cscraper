@@ -1,0 +1,10 @@
+{
+  "name": "cscraper",
+  "version": "1.0.0",
+  "repository": "git@github.com:UbikZ/cscraper.git",
+  "author": "Gabriel Malet <gabrielmalet@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless-aws-sync": "file:./aws-sync"
+  }
+}
