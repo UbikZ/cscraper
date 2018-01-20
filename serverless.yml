@@ -5,10 +5,6 @@ frameworkVersion: ">=1.2.0 <2.0.0"
 plugins:
   - serverless-aws-sync
 
-custom:
-  s3Bucket: t.ubikz.com
-  dns: t.ubikz.com
-
 provider:
   name: aws
   runtime: nodejs6.10
@@ -42,7 +38,7 @@ resources:
     WebAppS3Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.s3Bucket}
+        BucketName: ${opt:dns}
         AccessControl: PublicRead
     WebAppS3BucketPolicy:
       Type: AWS::S3::BucketPolicy
@@ -53,23 +49,32 @@ resources:
           Statement:
             - Sid: PublicReadGetObject
               Effect: Allow
-              Principal: "*"
+              Principal: '*'
               Action:
               - s3:GetObject
-              Resource: arn:aws:s3:::${self:custom.s3Bucket}/*
+              Resource: arn:aws:s3:::${opt:dns}/*
+            - Sid: ListWriteDeleteAccess
+              Effect: "Allow"
+              Action:
+                - s3:ListBucket
+                - s3:PutObject
+                - s3:DeleteObject
+              Resource: arn:aws:s3:::${opt:dns}/*
+              Principal:
+                  AWS: arn:aws:iam::${opt:user}
     WebAppCloudFrontDistribution:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
           Origins:
-            - DomainName: ${self:custom.s3Bucket}.s3.amazonaws.com
+            - DomainName: ${opt:dns}.s3.amazonaws.com
               Id: cscraper-app
-              OriginPath:
-                DomainName: ${self:custom.s3Bucket}
-          Enabled: 'true'
-          HttpVersion: http2|http1.1|http1.0
+              S3OriginConfig:
+                OriginAccessIdentity: ''
+          Enabled: true
+          HttpVersion: http2
           Aliases:
-           - ${self:custom.dns}
+           - ${opt:dns}
           DefaultRootObject: index.html
           CustomErrorResponses:
             - ErrorCode: 404
@@ -84,7 +89,7 @@ resources:
               - HEAD
             TargetOriginId: cscraper-app
             ForwardedValues:
-              QueryString: 'true'
+              QueryString: true
               QueryStringCacheKeys:
                 - v
             ViewerProtocolPolicy: redirect-to-https
