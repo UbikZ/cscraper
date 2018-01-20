@@ -35,6 +35,21 @@ resources:
           DedicatedMasterEnabled: false
           ZoneAwarenessEnabled: false
         ElasticsearchVersion: "6.0"
+        AccessPolicies:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Action:
+              - es:ESHttpGet
+              - es:ESHttpHead
+            Principal: '*'
+          - Sid: WriteDeleteAccess
+            Effect: Allow
+            Action:
+              - es:ESHttpPost
+              - es:ESHttpPut
+              - es:ESHttpDelete
+            Principal:
+                AWS: arn:aws:iam::${opt:user}
     WebAppS3Bucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -49,12 +64,12 @@ resources:
           Statement:
             - Sid: PublicReadGetObject
               Effect: Allow
-              Principal: '*'
               Action:
               - s3:GetObject
               Resource: arn:aws:s3:::${opt:dns}/*
+              Principal: '*'
             - Sid: ListWriteDeleteAccess
-              Effect: "Allow"
+              Effect: Allow
               Action:
                 - s3:ListBucket
                 - s3:PutObject
