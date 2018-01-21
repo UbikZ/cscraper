@@ -6,5 +6,8 @@
   "license": "MIT",
   "devDependencies": {
     "serverless-aws-sync": "file:./aws-sync"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.185.0"
   }
 }
