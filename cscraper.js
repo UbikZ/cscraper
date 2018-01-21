@@ -5,21 +5,22 @@ const path = require('path');
 
 const esDomain = {
   endpoint: process.env.ES_ENDPOINT,
-  region: process.env.ES_REGION
+  region: process.env.AWS_REGION
 };
 
 const endpoint = new AWS.Endpoint(esDomain.endpoint);
 const credentials = new AWS.EnvironmentCredentials('AWS');
-credentials.accessKeyId = process.env.AWS_KEY;
-credentials.secretAccessKey = process.env.AWS_SECRET;
+credentials.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+credentials.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
 const indexDocumentToES = function (document, context) {
   const request = new AWS.HttpRequest(endpoint);
 
   request.method = 'POST';
-  request.path = path.join('/csraper/feeds');
+  request.path = path.join('/cscraper/feeds');
   request.region = esDomain.region;
-  request.body = document;
+  request.body = JSON.stringify(document);
+  request.headers['Content-Type'] = 'application/json';
   request.headers['presigned-expires'] = false;
   request.headers['Host'] = endpoint.host;
 
@@ -32,20 +33,20 @@ const indexDocumentToES = function (document, context) {
 
     httpResp.on('data', function (chunk) {
       body += chunk;
+      console.log('Result request : ', body);
     });
 
     httpResp.on('end', function (chunk) {
-      console.log('All ' + numDocsAdded + ' log records added to ES.');
+      console.log('Successfully sent to ES.');
       context.succeed();
     });
   }, function (err) {
     console.log('Error: ' + err);
-    console.log(numDocsAdded + 'of ' + totLogLines + ' log records added to ES.');
     context.fail();
   });
 };
 
-module.exports.run = (event, context) => {
+module.exports.run = (event, context, callback) => {
   console.log('Received event: ', JSON.stringify(event, null, 2));
 
   const time = new Date();
@@ -53,7 +54,7 @@ module.exports.run = (event, context) => {
 
   console.log(msg);
 
-  indexDocumentToES({title: 'test'}, context);
+  indexDocumentToES({title: 'test2'}, context);
 
   const response = {
     statusCode: 200,
