@@ -1,8 +1,11 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const JSDOM = require("jsdom").JSDOM;
+const Parser = require('rss-parser');
 const path = require('path');
 
+const parser = new Parser();
 const esDomain = {
   endpoint: process.env.ES_ENDPOINT,
   region: process.env.AWS_REGION
@@ -12,6 +15,9 @@ const endpoint = new AWS.Endpoint(esDomain.endpoint);
 const credentials = new AWS.EnvironmentCredentials('AWS');
 credentials.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
 credentials.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
+const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
 const indexDocumentToES = function (document, context) {
   const request = new AWS.HttpRequest(endpoint);
@@ -54,7 +60,16 @@ module.exports.run = (event, context, callback) => {
 
   console.log(msg);
 
-  indexDocumentToES({title: 'test2'}, context);
+  rssFeeds.forEach(feedUrl => parser.parseURL(feedUrl, (err, feed) => feed.items.forEach(entry => {
+    const doc = new JSDOM(entry.content).window.document;
+    [].slice.call(doc.querySelectorAll('a')).filter(el => el.textContent === '[link]').forEach(el => {
+      if (!entry.title.match(shouldNotMatch)) {
+        console.log(`${entry.title}:`, el.getAttribute('href'));
+      }
+    });
+  })));
+
+  // indexDocumentToES({title: 'test2'}, context);
 
   const response = {
     statusCode: 200,

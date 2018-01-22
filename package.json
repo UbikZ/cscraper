@@ -8,6 +8,8 @@
     "serverless-aws-sync": "file:./aws-sync"
   },
   "dependencies": {
-    "aws-sdk": "^2.185.0"
+    "aws-sdk": "^2.185.0",
+    "jsdom": "^11.5.1",
+    "rss-parser": "^3.0.1"
   }
 }
