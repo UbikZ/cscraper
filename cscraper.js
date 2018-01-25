@@ -1,6 +1,7 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const sw = require('stopword');
 const crypto = require('crypto')
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
@@ -80,6 +81,9 @@ module.exports.run = (event, context, callback) => {
             checksum.update(link);
             const key = checksum.digest('hex');
 
+            const sanitizedTitle = entry.title.toLowerCase().replace(/[^a-z]+/g, ' ');
+            const tags = sw.removeStopwords(sanitizedTitle.split(' ')).filter(w => w.length > 2);
+
             if (!~hashes.indexOf(key)) {
               bulkToInsert.push({
                 _id: key,
@@ -87,7 +91,7 @@ module.exports.run = (event, context, callback) => {
                 date: new Date(),
                 author: entry.author,
                 url: link,
-                tags: [entry.category.$.term].concat([]),
+                tags: [entry.category.$.term].concat(tags),
               });
               hashes.push(key);
             }
