@@ -61,7 +61,44 @@ module.exports.run = (event, context, callback) => {
   const time = new Date();
   const msg = `Your cron function "${context.functionName}" ran at ${time}`;
 
-  rssFeeds.forEach(rssFeed => parser.parseURL(rssFeed, (err, feed) => {
+
+  const asyncFunc = (rssFeed) => new Promise(resolve => parser.parseURL(rssFeed, (err, feed) => resolve(feed)));
+
+  (async () => rssFeeds.map(async (rssFeed) => await asyncFunc(rssFeed)))()
+    .then(entry => Promise.all(entry))
+    .then(feeds => {
+      const hashes = [];
+      const bulkToInsert = [];
+
+      feeds.forEach(feed => feed.items.forEach(entry => {
+        const doc = new JSDOM(entry.content).window.document;
+
+        [].slice.call(doc.querySelectorAll('a')).filter(el => el.textContent === '[link]').forEach(el => {
+          if (!entry.title.match(shouldNotMatch)) {
+            const checksum = crypto.createHash('sha1');
+            const link = el.getAttribute('href');
+            checksum.update(link);
+            const key = checksum.digest('hex');
+
+            if (!~hashes.indexOf(key)) {
+              bulkToInsert.push({
+                _id: key,
+                title: entry.title,
+                date: new Date(),
+                author: entry.author,
+                url: link,
+                tags: [entry.category.$.term].concat([]),
+              });
+              hashes.push(key);
+            }
+          }
+        });
+      }));
+
+      console.log(bulkToInsert);
+    });
+
+  /*rssFeeds.forEach(rssFeed => parser.parseURL(rssFeed, (err, feed) => {
     const bulkToInsert = {};
 
     console.log(feed);
@@ -89,7 +126,7 @@ module.exports.run = (event, context, callback) => {
     });
 
     console.log(bulkToInsert);
-  }));
+  }));*/
 
 
   // indexDocumentToES({title: 'test2'}, context);
