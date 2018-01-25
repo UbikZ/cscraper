@@ -1,11 +1,16 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const crypto = require('crypto')
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
 const path = require('path');
 
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: ['category']
+  }
+});
 const esDomain = {
   endpoint: process.env.ES_ENDPOINT,
   region: process.env.AWS_REGION
@@ -53,21 +58,39 @@ const indexDocumentToES = function (document, context) {
 };
 
 module.exports.run = (event, context, callback) => {
-  console.log('Received event: ', JSON.stringify(event, null, 2));
-
   const time = new Date();
   const msg = `Your cron function "${context.functionName}" ran at ${time}`;
 
-  console.log(msg);
+  rssFeeds.forEach(rssFeed => parser.parseURL(rssFeed, (err, feed) => {
+    const bulkToInsert = {};
 
-  rssFeeds.forEach(feedUrl => parser.parseURL(feedUrl, (err, feed) => feed.items.forEach(entry => {
-    const doc = new JSDOM(entry.content).window.document;
-    [].slice.call(doc.querySelectorAll('a')).filter(el => el.textContent === '[link]').forEach(el => {
-      if (!entry.title.match(shouldNotMatch)) {
-        console.log(`${entry.title}:`, el.getAttribute('href'));
-      }
+    console.log(feed);
+
+    feed.items.forEach(entry => {
+      const doc = new JSDOM(entry.content).window.document;
+
+      [].slice.call(doc.querySelectorAll('a')).filter(el => el.textContent === '[link]').forEach(el => {
+        if (!entry.title.match(shouldNotMatch)) {
+          const checksum = crypto.createHash('sha1');
+          const link = el.getAttribute('href');
+          checksum.update(link);
+          const key = checksum.digest('hex');
+
+          bulkToInsert[key] = {
+            _id: key,
+            title: entry.title,
+            date: new Date(),
+            author: entry.author,
+            url: link,
+            tags: [entry.category.$.term].concat([]),
+          };
+        }
+      });
     });
-  })));
+
+    console.log(bulkToInsert);
+  }));
+
 
   // indexDocumentToES({title: 'test2'}, context);
 
