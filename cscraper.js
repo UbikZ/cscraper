@@ -19,8 +19,8 @@ const esDomain = {
 
 const endpoint = new AWS.Endpoint(esDomain.endpoint);
 const credentials = new AWS.EnvironmentCredentials('AWS');
-credentials.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-credentials.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+credentials.accessKeyId = process.env.AWS_KEY;
+credentials.secretAccessKey = process.env.AWS_SECRET;
 
 const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
 const shouldNotMatch = process.env.APP_TITLE_REGEXP;
@@ -60,13 +60,12 @@ const indexDocumentToES = function (document, context) {
 
 module.exports.run = (event, context, callback) => {
   const time = new Date();
-  const msg = `Your cron function "${context.functionName}" ran at ${time}`;
+  const hashes = [];
+  const bulkToInsert = [];
 
   Promise
     .all(rssFeeds.map(rssFeed => new Promise(resolve => parser.parseURL(rssFeed, (err, feed) => resolve(feed)))))
     .then(feeds => {
-      const hashes = [];
-      const bulkToInsert = [];
 
       feeds.forEach(feed => feed.items.forEach(entry => {
         const doc = new JSDOM(entry.content).window.document;
@@ -97,16 +96,16 @@ module.exports.run = (event, context, callback) => {
       }));
 
       console.log(bulkToInsert);
+
+      // indexDocumentToES({title: 'test2'}, context);
+
+      const response = {
+        statusCode: 200,
+        body: JSON.stringify({
+          size: bulkToInsert.length,
+        }),
+      };
+
+      callback(null, response);
     });
-
-  // indexDocumentToES({title: 'test2'}, context);
-
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      msg,
-    }),
-  };
-
-  callback(null, response);
 };
