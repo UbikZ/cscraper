@@ -46,8 +46,23 @@ resources:
               Effect: Allow
               Action:
                 - es:ESHttpGet
-                - es:ESHttpHead
               Principal: '*'
+            - Sid: ESWriteDeleteAccess
+              Effect: Allow
+              Action:
+                - es:ESHttpPost
+                - es:ESHttpPut
+                - es:ESHttpDelete
+              Principal:
+                AWS: arn:aws:iam::${env:AWS_USER}
+            - Sid: ESAll
+              Effect: Allow
+              Action:
+                - es:*
+              Principal: '*'
+              Condition:
+                IpAddress:
+                  aws:SourceIp: ${env:ES_ALLOW_IP}
     WebAppS3Bucket:
       Type: AWS::S3::Bucket
       Properties:
