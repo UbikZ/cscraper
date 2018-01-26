@@ -14,8 +14,8 @@ provider:
 functions:
   cscraper:
     handler: cscraper.run
-    events:
-      - schedule: rate(10 minutes)
+#    events:
+#      - schedule: rate(30 minutes)
     environment:
       ES_ENDPOINT:
         Fn::GetAtt: [ ElasticSearchInstance , DomainEndpoint ]
