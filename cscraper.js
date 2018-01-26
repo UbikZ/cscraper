@@ -6,6 +6,7 @@ const crypto = require('crypto')
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
 const path = require('path');
+const url = require('url');
 
 const parser = new Parser({
   customFields: {
@@ -87,6 +88,7 @@ module.exports.run = (event, context, callback) => {
                 date: new Date(),
                 author: entry.author,
                 url: link,
+                provider: url.parse(link).hostname.split('.').filter(s => s.length > 2)[0],
                 tags: [entry.category.$.term].concat(tags),
               });
               hashes.push(key);
