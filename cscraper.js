@@ -23,28 +23,22 @@ credentials.secretAccessKey = process.env.AWS_SECRET;
 const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
 const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
-const indexDocumentToES = function (bulkDocument, context) {
-  return new Promise((resolve, reject) => {
-    const es = require('elasticsearch').Client({
-      host: endpoint.host,
-      connectionClass: require('http-aws-es'),
-      amazonES: {
-        region: AWS_REGION,
-        credentials,
-      }
-    });
-
-    es.bulk({body: bulkDocument}, (err, resp) => {
-      if (err) {
-        context.fail();
-        reject(err);
-      } else {
-        context.succeed();
-        resolve(resp);
-      }
-    });
-  });
-};
+const indexDocumentToES = (bulkDocument, context) => new Promise((resolve, reject) => require('elasticsearch').Client({
+  host: endpoint.host,
+  connectionClass: require('http-aws-es'),
+  amazonES: {
+    region: AWS_REGION,
+    credentials,
+  }
+}).bulk({body: bulkDocument}, (err, resp) => {
+  if (err) {
+    context.fail();
+    reject(err);
+  } else {
+    context.succeed();
+    resolve(resp);
+  }
+}));
 
 module.exports.run = (event, context, callback) => {
   const hashes = [];
@@ -53,7 +47,6 @@ module.exports.run = (event, context, callback) => {
   Promise
     .all(rssFeeds.map(rssFeed => new Promise(resolve => parser.parseURL(rssFeed, (err, feed) => resolve(feed)))))
     .then(feeds => {
-
       feeds.forEach(feed => feed.items.forEach(entry => {
         const doc = new JSDOM(entry.content).window.document;
 
