@@ -29,7 +29,7 @@ class AwsSync {
 
   // syncs the `app` directory to the provided bucket
   syncDirectory() {
-    const s3Bucket = this.serverless.variables.service.custom.s3Bucket;
+    const s3Bucket = process.env.S3_DNS;
     const result = spawnSync('aws', ['s3', 'sync', 'build/', `s3://${s3Bucket}/`]);
 
     const stdout = result.stdout.toString();
@@ -59,8 +59,7 @@ class AwsSync {
       this.options.region
     ).then((result) => {
       const outputs = result.Stacks[0].Outputs;
-      const output = outputs.find(entry => entry.OutputKey === 'WebAppCloudFrontDistributionOutput');
-      this.serverless.cli.log(`Web App Domain: ${output.OutputValue ? output.OutputValue : 'Not Found'}`);
+      outputs.forEach(output => this.serverless.cli.log(`${output.OutputKey}: ${output.OutputValue ? output.OutputValue : 'Not Found'}`));
     });
   }
 }
