@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "aws-sdk": "^2.185.0",
+    "elasticsearch": "^14.0.0",
+    "http-aws-es": "^4.0.0",
     "jsdom": "^11.5.1",
     "rss-parser": "^3.0.1",
     "stopword": "^0.1.9"

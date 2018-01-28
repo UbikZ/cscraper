@@ -2,7 +2,6 @@
 
 # init
 readonly envFile='.env'
-readonly binServerless='sls'
 
 # Usage
 usage () {
@@ -55,7 +54,7 @@ function tunnel() {
 function invoke() {
     local arg='local'
     [ -z $1 ] && local arg=''
-    ${binServerless} invoke "${arg}" -f cscraper
+    serverless invoke ${arg} -f cscraper
 }
 
 #

@@ -5,7 +5,6 @@ const sw = require('stopword');
 const crypto = require('crypto')
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
-const path = require('path');
 const url = require('url');
 
 const parser = new Parser({
@@ -26,43 +25,24 @@ const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
 const indexDocumentToES = function (bulkDocument, context) {
   return new Promise((resolve, reject) => {
-    try {
-      const request = new AWS.HttpRequest(endpoint);
-      const body = bulkDocument.map(doc => JSON.stringify(doc)).join('\n');
+    const es = require('elasticsearch').Client({
+      host: endpoint.host,
+      connectionClass: require('http-aws-es'),
+      amazonES: {
+        region: AWS_REGION,
+        credentials,
+      }
+    });
 
-      request.method = 'POST';
-      request.path = path.join('_bulk');
-      request.region = AWS_REGION;
-      request.body = body;
-      request.headers['Content-Type'] = 'application/json';
-      request.headers['presigned-expires'] = false;
-      request.headers['Host'] = endpoint.host;
-
-      console.log('Body to send : ', body);
-
-      const signer = new AWS.Signers.V4(request, 'es');
-      signer.addAuthorization(credentials, new Date());
-
-      const send = new AWS.NodeHttpClient();
-      send.handleRequest(request, null, function (httpResp) {
-        let body = '';
-
-        httpResp.on('data', function (chunk) {
-          body += chunk;
-          console.log('Result : ', body);
-        });
-
-        httpResp.on('end', function (chunk) {
-          context.succeed();
-          resolve('Successfully sent to ES.');
-        });
-      }, function (err) {
+    es.bulk({body: bulkDocument}, (err, resp) => {
+      if (err) {
         context.fail();
         reject(err);
-      });
-    } catch (err) {
-      reject(err);
-    }
+      } else {
+        context.succeed();
+        resolve(resp);
+      }
+    });
   });
 };
 
