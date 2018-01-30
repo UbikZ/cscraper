@@ -1,4 +1,4 @@
-build
+dist
 node_modules
 .serverless
 .DS_Store
@@ -6,4 +6,3 @@ node_modules
 .idea
 .env
 *.log
-

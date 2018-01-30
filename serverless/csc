@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # init
-readonly envFile='.env'
+readonly envFile='./../.env'
 
 # Usage
 usage () {

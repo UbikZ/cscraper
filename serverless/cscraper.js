@@ -2,7 +2,7 @@
 
 const AWS = require('aws-sdk');
 const sw = require('stopword');
-const crypto = require('crypto')
+const crypto = require('crypto');
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
 const url = require('url');
