@@ -42,9 +42,13 @@ module.exports = {
       extensions: ['.js'],
     },
     externals: {
-      'react': 'react',
+      'react': 'React',
+      'redux': 'Redux',
       'react-dom': 'ReactDOM',
-      'react-router': 'ReactRouter'
+      'redux-thunk': 'ReduxThunk',
+      'react-redux': 'ReactRedux',
+      'react-router-dom': 'ReactRouterDOM',
+      'prop-types': 'PropTypes'
     }
   }
 };

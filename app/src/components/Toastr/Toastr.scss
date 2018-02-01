@@ -1,0 +1,11 @@
+.toastr-block {
+  z-index: 99999;
+  position: absolute;
+  top: 70px;
+  right: 10px;
+
+  .toastr-item {
+    width: 300px;
+    margin-bottom: 10px;
+  }
+}

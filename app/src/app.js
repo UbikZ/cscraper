@@ -1,11 +1,25 @@
 import React from 'react';
+import thunk from 'redux-thunk';
 import {render} from 'react-dom';
-import './app.scss'
+import {BrowserRouter} from 'react-router-dom';
+import {Provider} from 'react-redux';
+import {applyMiddleware, compose, createStore} from 'redux';
+
+import reducers from './reducers';
+import {App} from "./containers";
+
+const composeEnhancers = (process.env.NODE_ENV !== 'production' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) || compose;
+const store = createStore(
+  reducers,
+  composeEnhancers(applyMiddleware(thunk)),
+);
 
 const markup = (
-  <div>
-    Hello from react test
-  </div>
+  <Provider store={store}>
+    <BrowserRouter>
+      <App/>
+    </BrowserRouter>
+  </Provider>
 );
 
 render(markup, document.getElementById('app'));
@@ -15,3 +29,6 @@ if (module.hot) {
     console.log('Accepting the updated printMe module!');
   })
 }
+
+window.React = React;
+window.ReactRouterDOM = ReactRouterDOM;
