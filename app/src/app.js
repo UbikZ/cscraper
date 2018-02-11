@@ -6,7 +6,9 @@ import {Provider} from 'react-redux';
 import {applyMiddleware, compose, createStore} from 'redux';
 
 import reducers from './reducers';
-import {App} from "./containers";
+import {App} from './containers';
+
+import './app.scss';
 
 const composeEnhancers = (process.env.NODE_ENV !== 'production' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) || compose;
 const store = createStore(

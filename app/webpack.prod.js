@@ -18,7 +18,7 @@ module.exports = merge(common.config, {
   },
   module: {
     rules: [{
-      test: /\.scss$/,
+      test: /\.s?css$/,
       use: extractSass.extract({
         use: [{
           loader: "css-loader", options: {minimize: true}
@@ -68,7 +68,6 @@ module.exports = merge(common.config, {
   ],
   performance: {
     maxAssetSize: 200000,
-    maxEntrypointSize: 200000,
     hints: 'warning'
   },
 });

@@ -14,7 +14,7 @@ module.exports = merge(common.config, {
   module: {
     rules: [
       {
-        test: /\.scss$/,
+        test: /\.s?css$/,
         use: [{
           loader: "style-loader"
         }, {
