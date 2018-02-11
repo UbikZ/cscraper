@@ -1,5 +1,6 @@
+// @flow
+
 import React, {Component} from 'react';
-import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
 import style from './Toastr.scss';
@@ -9,12 +10,15 @@ const mapStateToProps = function (state) {
   return {notifs};
 };
 
-@connect(mapStateToProps)
-export class Toastr extends Component {
-  static propTypes = {
-    notifs: PropTypes.array.isRequired
-  };
+type Props = {
+  notifs: Array<{
+    title?: string,
+    message: string,
+  }>,
+};
 
+@connect(mapStateToProps)
+export class Toastr extends Component<Props> {
   render() {
     const {notifs} = this.props;
 

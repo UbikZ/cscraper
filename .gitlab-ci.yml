@@ -1,0 +1,32 @@
+.default: &default_definition
+  image: node:8-alpine
+  before_script:
+    - node --version
+    - yarn --version
+  script:
+    - cd app
+    - echo "TODO"
+  only:
+    - develop
+
+stages:
+  - test
+  - deploy
+
+tests:node-8:
+  <<: *default_definition
+  stage: test
+  script:
+      - echo "TODO"
+    only:
+      - develop
+
+deploys:aws:
+  <<: *default_definition
+  stage: deploy
+  script:
+    - cd serverless
+    - yarn install
+    - . csc deploy
+  only:
+    - tag

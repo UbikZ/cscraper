@@ -1,7 +1,5 @@
-const path = require('path');
 const merge = require('webpack-merge');
 const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const common = require('./webpack.common.js');
 
 module.exports = merge(common.config, {
@@ -11,9 +9,6 @@ module.exports = merge(common.config, {
     hot: true
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: path.join(common.variables.paths.src, 'index.dev.html'),
-    }),
     new webpack.HotModuleReplacementPlugin(),
   ],
   module: {

@@ -29,6 +29,3 @@ if (module.hot) {
     console.log('Accepting the updated printMe module!');
   })
 }
-
-window.React = React;
-window.ReactRouterDOM = ReactRouterDOM;

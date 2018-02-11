@@ -1,9 +1,9 @@
-const path = require('path');
 const webpack = require('webpack');
 const merge = require('webpack-merge');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const CompressionPlugin = require("compression-webpack-plugin");
+const PreloadWebpackPlugin = require('preload-webpack-plugin');
+
 const common = require('./webpack.common.js');
 
 const extractSass = new ExtractTextPlugin({
@@ -11,7 +11,8 @@ const extractSass = new ExtractTextPlugin({
 });
 
 module.exports = merge(common.config, {
-  devtool: 'source-map',
+  devtool: 'cheap-module-source-map',
+  cache: false,
   output: {
     filename: '[name].bundle.js?v=[chunkhash]',
   },
@@ -28,17 +29,41 @@ module.exports = merge(common.config, {
     }]
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: path.join(common.variables.paths.src, 'index.prod.html'),
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false,
+        pure_getters: true,
+        unsafe: true,
+        unsafe_comps: true,
+        screw_ie8: true
+      },
+      output: {
+        comments: false,
+      },
+      exclude: [/\.min\.js$/gi]
     }),
-    new UglifyJSPlugin({
-      sourceMap: true
+    new CompressionPlugin({
+      test: /\.(js|css)$/,
+      asset: '[path].gz?[query]'
     }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
+    new PreloadWebpackPlugin({
+      rel: 'preload',
+      as: 'script',
+      include: 'all',
+      fileBlacklist: [/\.(css|map)$/]
+    }),
     new webpack.HashedModuleIdsPlugin(),
-    new webpack.optimize.CommonsChunkPlugin({name: 'vendor'}),
+    new webpack.optimize.ModuleConcatenationPlugin(),
+    new webpack.optimize.CommonsChunkPlugin({
+        name: 'vendor',
+        minChunks(module) {
+          return module.context && module.context.indexOf('node_modules') >= 0;
+        }
+      }
+    ),
     extractSass,
   ],
   performance: {

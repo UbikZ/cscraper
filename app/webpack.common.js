@@ -1,5 +1,6 @@
-const webpack = require('webpack');
 const path = require('path');
+const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 const variables = {
@@ -19,12 +20,18 @@ module.exports = {
       chunkFilename: '[name].bundle.js',
     },
     plugins: [
+      new HtmlWebpackPlugin({
+        template: path.join(variables.paths.src, 'index.html'),
+      }),
       new CleanWebpackPlugin([variables.paths.dist]),
       new webpack.DefinePlugin({
         'process.env.ES_ENDPOINT': JSON.stringify(process.env.ES_ENDPOINT)
       }),
       new webpack.optimize.CommonsChunkPlugin({
-        name: 'vendor'
+        name: 'vendor',
+        minChunks: function (module) {
+          return module.context && module.context.indexOf('node_modules') !== -1;
+        }
       }),
     ],
     module: {
@@ -40,15 +47,6 @@ module.exports = {
     },
     resolve: {
       extensions: ['.js'],
-    },
-    externals: {
-      'react': 'React',
-      'redux': 'Redux',
-      'react-dom': 'ReactDOM',
-      'redux-thunk': 'ReduxThunk',
-      'react-redux': 'ReactRedux',
-      'react-router-dom': 'ReactRouterDOM',
-      'prop-types': 'PropTypes'
     }
   }
 };
