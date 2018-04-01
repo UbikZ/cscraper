@@ -10,7 +10,14 @@ provider:
   runtime: nodejs6.10
   region: eu-west-1
   memorySize: 128
-
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - es:ESHttpPost
+        - es:ESHttpPut
+        - es:ESHttpDelete
+      Resource:
+        Fn::GetAtt: [ ElasticSearchInstance, DomainArn ]
 functions:
   cscraper:
     handler: cscraper.run
@@ -47,14 +54,6 @@ resources:
               Action:
                 - es:ESHttpGet
               Principal: '*'
-            - Sid: ESWriteDeleteAccess
-              Effect: Allow
-              Action:
-                - es:ESHttpPost
-                - es:ESHttpPut
-                - es:ESHttpDelete
-              Principal:
-                AWS: arn:aws:iam::${env:AWS_USER}
             - Sid: ESAll
               Effect: Allow
               Action:
@@ -117,4 +116,4 @@ resources:
   Outputs:
     WebAppCloudFrontDistributionOutput:
       Value:
-        'Fn::GetAtt': [ WebAppCloudFrontDistribution, DomainName ]
+        Fn::GetAtt: [ WebAppCloudFrontDistribution, DomainName ]
