@@ -7,7 +7,7 @@ binServerless=${binServerless:='sls'}
 # Usage
 usage () {
     echo ""
-    echo "  usage: . csc [--deploy] [--inv] [--invl] [--ess] [--tunnel]"
+    echo "  usage: . csc [--debug] [--deploy] [--inv] [--invl] [--ess] [--tunnel]"
     echo ""
     exit 1
 }
@@ -23,6 +23,7 @@ else
 fi
 
 # Cmd handler
+cmdDebug=0
 cmdDeploy=0
 cmdInvoke=0
 cmdInvokeLocal=0
@@ -32,6 +33,7 @@ cmdEss=0
 # Parameters reading :
 while [ ! -z $1 ]; do
     case "$1" in
+        --debug) cmdDebug=1 ;;
         --deploy) cmdDeploy=1 ;;
         --inv) cmdInvoke=1 ;;
         --invl) cmdInvokeLocal=1 ;;
@@ -95,8 +97,12 @@ checkVar "${APP_TITLE_REGEXP}" "APP_TITLE_REGEXP"
 # Business logic here
 #
 
+if [[ ${cmdDebug} -eq 1 ]]; then
+    export SLS_DEBUG=*
+fi
+
 if [[ ${cmdDeploy} -eq 1 ]]; then
-    deploy && tunnel
+    deploy
 fi
 
 if [[ ${cmdInvoke} -eq 1 ]]; then

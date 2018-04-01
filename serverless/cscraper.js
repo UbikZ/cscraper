@@ -23,7 +23,7 @@ credentials.secretAccessKey = process.env.AWS_SECRET;
 const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
 const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
-console.log('ENDPOINT', endpoint);
+console.log('ENDPOINT', endpoint.href);
 console.log('AWS_KEY', credentials.accessKeyId);
 console.log('AWS_SECRET', credentials.secretAccessKey);
 console.log('APP_RSS_FEEDS', rssFeeds);
@@ -38,12 +38,15 @@ const indexDocumentToES = (bulkDocument, context) => new Promise((resolve, rejec
     credentials,
   }
 }).bulk({body: bulkDocument}, (err, resp) => {
+  console.log('Error : ', err);
+  console.log('Response took : ', resp.took);
+
   if (err) {
     context.fail();
     reject(err);
   } else {
     context.succeed();
-    resolve(resp);
+    resolve();
   }
 }));
 
@@ -84,7 +87,7 @@ module.exports.run = (event, context, callback) => {
                 date: new Date(),
                 author: entry.author,
                 url: link,
-                provider: url.parse(link).hostname.split('.').filter(s => s.length > 2)[0],
+                provider: url.parse(link).hostname.split('.').filter(s => s.length > 2 && s !== 'www')[0],
                 tags: [entry.category.$.term].concat(tags),
               });
               hashes.push(key);
@@ -97,11 +100,9 @@ module.exports.run = (event, context, callback) => {
 
       return indexDocumentToES(bulkToInsert, context);
     })
-    .then(msg => callback(null, {
+    .then(() => callback(null, {
       statusCode: 200,
       body: JSON.stringify({
-        msg,
-        es: endpoint,
         size: bulkToInsert.length / 2,
       }),
     }))
