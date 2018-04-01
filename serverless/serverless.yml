@@ -18,6 +18,7 @@ provider:
         - es:ESHttpDelete
       Resource:
         Fn::GetAtt: [ ElasticSearchInstance, DomainArn ]
+
 functions:
   cscraper:
     handler: cscraper.run

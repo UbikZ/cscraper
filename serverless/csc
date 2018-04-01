@@ -7,7 +7,7 @@ binServerless=${binServerless:='sls'}
 # Usage
 usage () {
     echo ""
-    echo "  usage: . csc [--debug] [--deploy] [--inv] [--invl] [--ess] [--tunnel]"
+    echo "  usage: . csc [--debug] [--deploy] [--logs] [--inv] [--invl] [--ess] [--tunnel]"
     echo ""
     exit 1
 }
@@ -25,6 +25,7 @@ fi
 # Cmd handler
 cmdDebug=0
 cmdDeploy=0
+cmdLogs=0
 cmdInvoke=0
 cmdInvokeLocal=0
 cmdTunnel=0
@@ -35,6 +36,7 @@ while [ ! -z $1 ]; do
     case "$1" in
         --debug) cmdDebug=1 ;;
         --deploy) cmdDeploy=1 ;;
+        --logs) cmdLogs=1 ;;
         --inv) cmdInvoke=1 ;;
         --invl) cmdInvokeLocal=1 ;;
         --tunnel) cmdTunnel=1 ;;
@@ -62,7 +64,11 @@ function tunnel() {
 function invoke() {
     local arg='local'
     [ -z $1 ] && local arg=''
-    serverless invoke ${arg} -f cscraper
+    ${binServerless} invoke ${arg} -f cscraper
+}
+
+function logs() {
+    ${binServerless} logs -f cscraper
 }
 
 function esSize() {
@@ -102,6 +108,10 @@ fi
 
 if [[ ${cmdDeploy} -eq 1 ]]; then
     deploy
+fi
+
+if [[ ${cmdLogs} -eq 1 ]]; then
+    logs
 fi
 
 if [[ ${cmdInvoke} -eq 1 ]]; then
