@@ -7,7 +7,7 @@ binServerless=${binServerless:='sls'}
 # Usage
 usage () {
     echo ""
-    echo "  usage: . csc [--deploy] [--inv] [--invl]"
+    echo "  usage: . csc [--deploy] [--inv] [--invl] [--ess] [--tunnel]"
     echo ""
     exit 1
 }
@@ -27,6 +27,7 @@ cmdDeploy=0
 cmdInvoke=0
 cmdInvokeLocal=0
 cmdTunnel=0
+cmdEss=0
 
 # Parameters reading :
 while [ ! -z $1 ]; do
@@ -35,6 +36,7 @@ while [ ! -z $1 ]; do
         --inv) cmdInvoke=1 ;;
         --invl) cmdInvokeLocal=1 ;;
         --tunnel) cmdTunnel=1 ;;
+        --ess) cmdEss=1 ;;
         -h|--help) usage ;;
         *) echo "> Wrong options, just check the usage"; usage ;;
     esac
@@ -61,12 +63,17 @@ function invoke() {
     serverless invoke ${arg} -f cscraper
 }
 
+function esSize() {
+    curl "${ES_ENDPOINT_DEV}/_cat/shards/*?v"
+    curl "${ES_ENDPOINT_DEV}/_cat/segments/*?v"
+}
+
 function getCloudFrontDomain() {
     ${binServerless} domains | grep WebAppCloudFrontDistributionOutput | awk -F':' '{print $3}'
 }
 
 function getCloudFrontIP() {
-    getCloudFrontDomain |
+    getCloudFrontDomain
 }
 
 #
@@ -92,14 +99,18 @@ if [[ ${cmdDeploy} -eq 1 ]]; then
     deploy && tunnel
 fi
 
-if [[ ${cmdTunnel} -eq 1 ]]; then
-    tunnel
-fi
-
 if [[ ${cmdInvoke} -eq 1 ]]; then
     invoke
 fi
 
 if [[ ${cmdInvokeLocal} -eq 1 ]]; then
     invoke 'local'
+fi
+
+if [[ ${cmdEss} -eq 1 ]]; then
+    esSize
+fi
+
+if [[ ${cmdTunnel} -eq 1 ]]; then
+    tunnel
 fi

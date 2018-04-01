@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const PrepackWebpackPlugin = require('prepack-webpack-plugin');
 
 const variables = {
   paths: {
@@ -20,6 +21,7 @@ module.exports = {
       chunkFilename: '[name].bundle.js',
     },
     plugins: [
+      new PrepackWebpackPlugin(),
       new HtmlWebpackPlugin({
         template: path.join(variables.paths.src, 'index.html'),
       }),

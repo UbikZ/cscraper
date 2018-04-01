@@ -23,6 +23,13 @@ credentials.secretAccessKey = process.env.AWS_SECRET;
 const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
 const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
+console.log('ENDPOINT', endpoint);
+console.log('AWS_KEY', credentials.accessKeyId);
+console.log('AWS_SECRET', credentials.secretAccessKey);
+console.log('APP_RSS_FEEDS', rssFeeds);
+console.log('APP_TITLE_REGEXP', shouldNotMatch);
+
+
 const indexDocumentToES = (bulkDocument, context) => new Promise((resolve, reject) => require('elasticsearch').Client({
   host: endpoint.host,
   connectionClass: require('http-aws-es'),
@@ -44,9 +51,13 @@ module.exports.run = (event, context, callback) => {
   const hashes = [];
   const bulkToInsert = [];
 
+  console.log('Execute run');
+
   Promise
     .all(rssFeeds.map(rssFeed => new Promise(resolve => parser.parseURL(rssFeed, (err, feed) => resolve(feed)))))
     .then(feeds => {
+      console.log('Work on feeds');
+
       feeds.forEach(feed => feed.items.forEach(entry => {
         const doc = new JSDOM(entry.content).window.document;
 
@@ -82,6 +93,8 @@ module.exports.run = (event, context, callback) => {
         });
       }));
 
+      console.log('Documents to insert : ', bulkToInsert.length / 2);
+
       return indexDocumentToES(bulkToInsert, context);
     })
     .then(msg => callback(null, {
@@ -89,7 +102,7 @@ module.exports.run = (event, context, callback) => {
       body: JSON.stringify({
         msg,
         es: endpoint,
-        size: bulkToInsert.length,
+        size: bulkToInsert.length / 2,
       }),
     }))
     .catch(err => callback(null, {
@@ -97,7 +110,7 @@ module.exports.run = (event, context, callback) => {
       body: JSON.stringify({
         err,
         es: endpoint,
-        size: bulkToInsert.length,
+        size: bulkToInsert.length / 2,
       })
     }));
 };

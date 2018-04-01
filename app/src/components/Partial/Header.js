@@ -4,17 +4,15 @@ import {Link} from 'react-router-dom';
 export class Header extends Component {
   render() {
     return (
-      <section>
-        <nav>
-          <section>
-            <strong><Link to='/'>C-Scr4p3r</Link></strong>
-            <Link to='/authentication'>Auth</Link>
-          </section>
-          <section>
-            <a href="https://github.com/ubikz/cscraper" rel="noopener">Github</a>
-          </section>
-        </nav>
-      </section>
+      <header className="navbar">
+        <section className="navbar-section">
+        </section>
+        <section className="navbar-center">
+        </section>
+        <section className="navbar-section">
+          <a href="https://github.com/ubikz/cscraper" className="btn btn-link">Github</a>
+        </section>
+      </header>
     );
   }
 }
