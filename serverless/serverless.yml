@@ -28,8 +28,6 @@ functions:
     environment:
       ES_ENDPOINT:
         Fn::GetAtt: [ ElasticSearchInstance , DomainEndpoint ]
-      AWS_KEY: ${env:AWS_ACCESS_KEY_ID}
-      AWS_SECRET: ${env:AWS_SECRET_ACCESS_KEY}
       APP_RSS_FEEDS: ${env:APP_RSS_FEEDS}
       APP_TITLE_REGEXP: ${env:APP_TITLE_REGEXP}
 

@@ -1,11 +1,23 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const got = require('got');
+const BPromise = require('bluebird');
+const aws4 = require('aws4');
 const sw = require('stopword');
 const crypto = require('crypto');
 const JSDOM = require("jsdom").JSDOM;
 const Parser = require('rss-parser');
 const url = require('url');
+
+
+const {ES_ENDPOINT, ES_ENDPOINT_DEV, AWS_REGION} = process.env;
+
+const awsConfig = new AWS.Config({region: AWS_REGION});
+const endpoint = ES_ENDPOINT_DEV ? ES_ENDPOINT_DEV : ES_ENDPOINT;
+
+const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
+const shouldNotMatch = process.env.APP_TITLE_REGEXP;
 
 const parser = new Parser({
   customFields: {
@@ -13,42 +25,35 @@ const parser = new Parser({
   }
 });
 
-const {ES_ENDPOINT, ES_ENDPOINT_DEV, AWS_REGION} = process.env;
 
-const endpoint = new AWS.Endpoint(ES_ENDPOINT_DEV ? ES_ENDPOINT_DEV : ES_ENDPOINT);
-const credentials = new AWS.EnvironmentCredentials('AWS');
-credentials.accessKeyId = process.env.AWS_KEY;
-credentials.secretAccessKey = process.env.AWS_SECRET;
-
-const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
-const shouldNotMatch = process.env.APP_TITLE_REGEXP;
-
-console.log('ENDPOINT', endpoint.href);
-console.log('AWS_KEY', credentials.accessKeyId);
-console.log('AWS_SECRET', credentials.secretAccessKey);
+console.log('ENDPOINT', endpoint);
+console.log('AWS_REGION', AWS_REGION);
 console.log('APP_RSS_FEEDS', rssFeeds);
 console.log('APP_TITLE_REGEXP', shouldNotMatch);
 
+function request(host, options) {
+  let opts = Object.assign(url.parse(host), {
+    region: awsConfig.region,
+    protocol: 'https:',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }, options);
 
-const indexDocumentToES = (bulkDocument, context) => new Promise((resolve, reject) => require('elasticsearch').Client({
-  host: endpoint.host,
-  connectionClass: require('http-aws-es'),
-  amazonES: {
-    region: AWS_REGION,
-    credentials,
-  }
-}).bulk({body: bulkDocument}, (err, resp) => {
-  console.log('Error : ', err);
-  console.log('Response took : ', resp.took);
+  aws4.sign(opts, awsConfig.credentials);
 
-  if (err) {
-    context.fail();
-    reject(err);
-  } else {
-    context.succeed();
-    resolve();
-  }
-}));
+  console.log('Performing request', opts);
+
+  return BPromise.resolve(got(opts));
+}
+
+
+const reqIndexDocumentToES = bulkDocument => request('https://' + endpoint, {
+  method: 'POST',
+  path: '/_bulk',
+  body: bulkDocument.map(doc => JSON.stringify(doc) + '\n').join('')
+});
+
 
 module.exports.run = (event, context, callback) => {
   const hashes = [];
@@ -98,20 +103,30 @@ module.exports.run = (event, context, callback) => {
 
       console.log('Documents to insert : ', bulkToInsert.length / 2);
 
-      return indexDocumentToES(bulkToInsert, context);
+      return reqIndexDocumentToES(bulkToInsert, context);
     })
-    .then(() => callback(null, {
-      statusCode: 200,
-      body: JSON.stringify({
-        size: bulkToInsert.length / 2,
-      }),
-    }))
-    .catch(err => callback(null, {
-      statusCode: 500,
-      body: JSON.stringify({
-        err,
-        es: endpoint,
-        size: bulkToInsert.length / 2,
+    .then(() => {
+      context.succeed();
+
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify({
+          size: bulkToInsert.length / 2,
+        }),
       })
-    }));
+    })
+    .catch(err => {
+      console.log('Error', err);
+
+      context.fail();
+
+      callback(null, {
+        statusCode: 500,
+        body: JSON.stringify({
+          err,
+          es: endpoint,
+          size: bulkToInsert.length / 2,
+        })
+      })
+    });
 };
