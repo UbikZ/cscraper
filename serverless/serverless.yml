@@ -10,24 +10,18 @@ provider:
   runtime: nodejs6.10
   region: eu-west-1
   memorySize: 128
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - es:ESHttpPost
-        - es:ESHttpPut
-        - es:ESHttpDelete
-      Resource:
-        Fn::GetAtt: [ ElasticSearchInstance, DomainArn ]
 
 functions:
   cscraper:
     handler: cscraper.run
     timeout: 30
-#    events:
-#      - schedule: rate(30 minutes)
+    events:
+      - schedule: rate(10 minutes)
     environment:
       ES_ENDPOINT:
         Fn::GetAtt: [ ElasticSearchInstance , DomainEndpoint ]
+      AWS_KEY: ${env:ES_AWS_ACCESS_KEY_ID}
+      AWS_SECRET: ${env:ES_AWS_SECRET_ACCESS_KEY}
       APP_RSS_FEEDS: ${env:APP_RSS_FEEDS}
       APP_TITLE_REGEXP: ${env:APP_TITLE_REGEXP}
 

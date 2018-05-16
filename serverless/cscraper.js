@@ -14,6 +14,11 @@ const url = require('url');
 const {ES_ENDPOINT, ES_ENDPOINT_DEV, AWS_REGION} = process.env;
 
 const awsConfig = new AWS.Config({region: AWS_REGION});
+awsConfig.credentials = {
+  accessKeyId: process.env.AWS_KEY,
+  secretAccessKey: process.env.AWS_SECRET
+};
+
 const endpoint = ES_ENDPOINT_DEV ? ES_ENDPOINT_DEV : ES_ENDPOINT;
 
 const rssFeeds = JSON.parse(process.env.APP_RSS_FEEDS);
@@ -25,9 +30,9 @@ const parser = new Parser({
   }
 });
 
-
 console.log('ENDPOINT', endpoint);
 console.log('AWS_REGION', AWS_REGION);
+console.log('CREDENTIALS', awsConfig.credentials);
 console.log('APP_RSS_FEEDS', rssFeeds);
 console.log('APP_TITLE_REGEXP', shouldNotMatch);
 
@@ -47,13 +52,11 @@ function request(host, options) {
   return BPromise.resolve(got(opts));
 }
 
-
 const reqIndexDocumentToES = bulkDocument => request('https://' + endpoint, {
   method: 'POST',
   path: '/_bulk',
   body: bulkDocument.map(doc => JSON.stringify(doc) + '\n').join('')
 });
-
 
 module.exports.run = (event, context, callback) => {
   const hashes = [];

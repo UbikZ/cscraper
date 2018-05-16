@@ -89,9 +89,11 @@ function getCloudFrontIP() {
 #
 
 checkVar "${S3_DNS}" "S3_DNS"
-#checkVar "${ES_ENDPOINT}" "ES_ENDPOINT"
+checkVar "${ES_ENDPOINT_DEV}" "ES_ENDPOINT_DEV"
 checkVar "${ES_ALLOW_IP}" "ES_ALLOW_IP"
 checkVar "${AWS_REGION}" "AWS_REGION"
+checkVar "${ES_AWS_ACCESS_KEY_ID}" "ES_AWS_ACCESS_KEY_ID"
+checkVar "${ES_AWS_SECRET_ACCESS_KEY}" "ES_AWS_SECRET_ACCESS_KEY"
 checkVar "${CF_SSL_ARN}" "CF_SSL_ARN"
 checkVar "${APP_RSS_FEEDS}" "APP_RSS_FEEDS"
 checkVar "${APP_TITLE_REGEXP}" "APP_TITLE_REGEXP"
